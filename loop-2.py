@@ -16,12 +16,15 @@ from streamlit_modal import Modal
 import streamlit.components.v1 as components
 
 import os
-
+from dotenv import load_dotenv
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
 # from streamlit_chat import message
+
+# Load the environment variables from .env file
+load_dotenv()
 
 
 nest_asyncio.apply()
@@ -49,10 +52,13 @@ headers = {
 # ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
 
 
-# echo "export OPENAI_API_KEY='sk-xxxxxxxxxx'" >> ~/.zshrc
-# Setting the API key
-openai_api_key = os.environ["OPENAI_API_KEY"]
+# ---------------------------- Setting the API keys ----------------------------
 
+
+openai_api_key = os.getenv("OPENAI_API_KEY")
+browserless_api_key = os.getenv("BROWSERLESS_API_KEY")
+crove_api_key = os.getenv("CROVE_API_KEY")
+# ---------------------------- Setting the API keys ----------------------------
 
 # ---------------------------- LLM with Langchain ----------------------------
 
@@ -166,6 +172,134 @@ def generate_html(jobs):
 
 # ---------------------------- Generate HTML to display job results ----------------------------
 
+
+# ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
+def create_view_button(job, index):
+    # Unique key for each button based on job index
+    button_key = f"view_button_{index}"
+
+    # Instantiate the Modal object
+    # modal = Modal(title=f"job['Title']", key=f"modal_key_{index}")
+    modal = Modal(title=job["Title"], key=f"modal_key_{index}")
+    # Button to open the modal
+    if st.button("View Title", key=button_key):
+        modal.open()
+
+    if modal.is_open():
+        with modal.container():
+            st.write("Job Details")
+
+            st.write("Some fancy text")
+            value = st.checkbox("Check me")
+            st.write(f"Checkbox checked: {value}")
+            if st.button("Close", key=f"close_modal_{index}"):
+                modal.close()
+
+
+def create_job_div(job, index):
+    with st.container():
+        st.markdown(
+            f"""
+            <div class="ops">
+            <h2>{job['Title']}</h2>
+
+            <p>{job['Company']}</p>
+            <p>{job['Location']}</p>
+            <a href="{job['Job URL']}" target="_blank">Job Details</a>
+            </div>""",
+            unsafe_allow_html=True,
+        )
+        create_view_button(job, index)
+
+
+def jobs_display():
+    # Layout Parameters
+    num_columns_per_row = 3
+
+    # Create Columns
+    columns = st.columns(num_columns_per_row)
+
+    # Assuming you have a variable `num_columns_per_row` defined
+    # and a Streamlit columns setup `columns`
+    for index, job in enumerate(json_data):
+        column_index = index % num_columns_per_row
+        with columns[column_index]:
+            create_job_div(job, index)
+
+
+# ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
+
+
+# ---------------------------- Fetching Jobs and crawling their data ----------------------------
+async def fetch_jobs(url):
+    browser = await pyppeteer.launcher.connect(
+        browserWSEndpoint="wss://chrome.browserless.io?token=" + browserless_api_key
+    )
+    page = await browser.newPage()
+    await page.setUserAgent(customUA)
+    await page.goto(url)
+
+    alljobs = []
+
+    i_tag_count = await page.evaluate(
+        """() => {
+        return document.querySelectorAll('.base-card.relative').length;
+    }"""
+    )
+    await page.screenshot({"path": "quotes.png", "fullPage": True})
+
+    for i in range(1, i_tag_count + 1):
+        job_details = {}
+        job_container_selector = f"li:nth-of-type({i})"
+
+        # (1) Fetch job title
+        job_details["Title"] = clean_text(
+            await page.querySelectorEval(
+                f"{job_container_selector} .base-search-card__title",
+                "node => node.textContent",
+            )
+        )
+
+        # (2) Fetch job company
+        job_details["Company"] = clean_text(
+            await page.querySelectorEval(
+                f"{job_container_selector} .base-search-card__subtitle",
+                "node => node.textContent",
+            )
+        )
+
+        # (3) Fetch job location
+        job_details["Location"] = clean_text(
+            await page.querySelectorEval(
+                f"{job_container_selector} .job-search-card__location",
+                "node => node.textContent",
+            )
+        )
+
+        # Assuming the job URL is also within the i tag container
+        job_href_property = await page.querySelectorEval(
+            f"{job_container_selector} a[href*='jobs']", "a => a.href"
+        )
+        job_details["Job URL"] = job_href_property
+
+        # Fetch job details using requests and BeautifulSoup
+        # with requests.Session() as s:
+        #     response = s.get(job_details["jURL"], headers=headers)
+        #     soup = BeautifulSoup(response.content, features="lxml")
+        #     job_details["jDetails"] = [
+        #         element.get_text(strip=True)
+        #         for element in soup.select(".show-more-less-html__markup")
+        #     ]
+
+        alljobs.append(job_details)
+
+    await browser.close()
+    return alljobs
+
+
+# ---------------------------- Fetching Jobs and crawling their data ----------------------------
+
+
 c1, c2, c3 = st.columns(3)
 with c1:
     first_name = st.text_input("First name", "", placeholder="Mohammed")
@@ -203,7 +337,7 @@ def generate_resume_pdf(first_name, last_name, linkedin_URL, email, phone):
 
     headers = {
         "Content-Type": "application/json",
-        "X-API-KEY": os.environ["CROVE_API_KEY"],
+        "X-API-KEY": crove_api_key,
     }
 
     json_body = {
@@ -345,59 +479,7 @@ json_data = [
 ]
 
 
-def create_view_button(job, index):
-    # Unique key for each button based on job index
-    button_key = f"view_button_{index}"
-
-    # Instantiate the Modal object
-    # modal = Modal(title=f"job['Title']", key=f"modal_key_{index}")
-    modal = Modal(title=job["Title"], key=f"modal_key_{index}")
-    # Button to open the modal
-    if st.button("View Title", key=button_key):
-        modal.open()
-
-    if modal.is_open():
-        with modal.container():
-            st.write("Job Details")
-
-            st.write("Some fancy text")
-            value = st.checkbox("Check me")
-            st.write(f"Checkbox checked: {value}")
-            if st.button("Close", key=f"close_modal_{index}"):
-                modal.close()
-
-
-def create_job_div(job, index):
-    with st.container():
-        st.markdown(
-            f"""
-            <div class="ops">
-            <h2>{job['Title']}</h2>
-
-            <p>{job['Company']}</p>
-            <p>{job['Location']}</p>
-            <a href="{job['Job URL']}" target="_blank">Job Details</a>
-            </div>""",
-            unsafe_allow_html=True,
-        )
-        create_view_button(job, index)
-
-
-# Layout Parameters
-num_columns_per_row = 3
-
-# Create Columns
-columns = st.columns(num_columns_per_row)
-
-# Assuming you have a variable `num_columns_per_row` defined
-# and a Streamlit columns setup `columns`
-for index, job in enumerate(json_data):
-    column_index = index % num_columns_per_row
-    with columns[column_index]:
-        create_job_div(job, index)
-
-
-# Inject custom CSS to center the modal
+# Inject custom CSS to style the page and especially the modal
 st.markdown(
     """
 <style>
