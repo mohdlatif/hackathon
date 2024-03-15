@@ -96,15 +96,6 @@ def generate_response(input_text):
 # ---------------------------- LLM with Langchain ----------------------------
 
 
-with st.form("my_form"):
-    text = st.text_area(
-        "Enter text:",
-        "Who are you and what you do?",
-    )
-    submitted = st.form_submit_button("Submit")
-    if submitted:
-        generate_response(text)
-
 # ---------------------------- Cities ----------------------------
 cities_in_saudi = {
     "Riyadh": "Riyadh",
@@ -300,34 +291,6 @@ async def fetch_jobs(url):
 # ---------------------------- Fetching Jobs and crawling their data ----------------------------
 
 
-c1, c2, c3 = st.columns(3)
-with c1:
-    first_name = st.text_input("First name", "", placeholder="Mohammed")
-with c2:
-    last_name = st.text_input("Last name", "", placeholder="Abdulatef")
-with c3:
-    linkedin_URL = st.text_input(
-        "Linkedin/Website URL",
-        "",
-        placeholder="https://www.linkedin.com/in/[username]/",
-    )
-
-c4, c5, c6 = st.columns(3)
-with c4:
-    email = st.text_input("Email", "", placeholder="Mohammed@gmail.com")
-with c5:
-    phone = st.text_input("Phone", "", placeholder="0597593221")
-with c6:
-    with st.popover("Location"):
-        st.markdown("Choose your preferred work locations")
-        for city_name, city_value in cities_in_saudi.items():
-            if st.checkbox(city_name, key=city_value):
-                selected_cities.append(city_value)
-
-
-# st.write("Your name:", name)
-
-
 # ---------------------------- Generate PDF ----------------------------
 
 
@@ -398,88 +361,84 @@ def generate_resume_pdf(first_name, last_name, linkedin_URL, email, phone):
         )  # Indicate failure and the status code
 
 
-if st.button("Build Resume", type="primary"):
-    # Check if the required fields are not empty
-    if not all([first_name, last_name, email, phone]):
-        st.error("Please fill in all required fields.")
-    else:
-        with st.spinner(
-            "Generating the resume..."
-        ):  # This ensures the spinner shows while the function is running
-            success, result = generate_resume_pdf(
-                first_name, last_name, linkedin_URL, email, phone
-            )
-            if success:
-                st.success("Resume Generated!")
-                st.markdown(
-                    f'<a href="{result}" target="_blank">Download Resume</a>',
-                    unsafe_allow_html=True,
-                )  # Display the PDF file
-            else:
-                st.error(result)  # Display the error message
-
 # ---------------------------- Generate PDF ----------------------------
 
 
-json_data = [
-    {
-        "Title": "Human 1 &!",
-        "Company": "Helmerich & Payne",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 2 &!",
-        "Company": "ssss & ccc",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 3&!",
-        "Company": "fdsfdsf & dsfsdf",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 4&!",
-        "Company": "4234234 & vcxvxcv",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 5&!",
-        "Company": "234fdsd & vsvsdv",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 5&!",
-        "Company": "234fdsd & vsvsdv",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 5&!",
-        "Company": "234fdsd & vsvsdv",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 5&!",
-        "Company": "234fdsd & vsvsdv",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-    {
-        "Title": "Human 5&!",
-        "Company": "234fdsd & vsvsdv",
-        "Location": "Al Khobar, Eastern, Saudi Arabia",
-        "Job URL": "https://sa.linkedin.com/jobs/view/human-resources-officer-at-helmerich-payne-3842068224?position=1&pageNum=0&refId=QgU2InY9bJUn%2BVK2ZMXdUg%3D%3D&trackingId=ysUV%2FNWbHimtbPcPGbl4NA%3D%3D&trk=public_jobs_jserp-result_search-card",
-    },
-]
+url = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=hr&location=Eastern,%20Saudi%20Arabia&start=0"
 
 
-# Inject custom CSS to style the page and especially the modal
+async def main():
+    st.title("RezBot")
+
+    with st.form("my_form"):
+        text = st.text_area(
+            "Enter text:",
+            "Who are you and what you do?",
+        )
+        submitted = st.form_submit_button("Submit")
+        if submitted:
+            generate_response(text)
+
+    st.write("Lets gather basic info of you")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        first_name = st.text_input("First name", "", placeholder="Mohammed")
+    with c2:
+        last_name = st.text_input("Last name", "", placeholder="Abdulatef")
+    with c3:
+        linkedin_URL = st.text_input(
+            "Linkedin/Website URL",
+            "",
+            placeholder="https://www.linkedin.com/in/[username]/",
+        )
+
+    c4, c5, c6 = st.columns(3)
+    with c4:
+        email = st.text_input("Email", "", placeholder="Mohammed@gmail.com")
+    with c5:
+        phone = st.text_input("Phone", "", placeholder="0597593221")
+    with c6:
+        with st.popover("Location"):
+            st.markdown("Choose your preferred work locations")
+            for city_name, city_value in cities_in_saudi.items():
+                if st.checkbox(city_name, key=city_value):
+                    selected_cities.append(city_value)
+
+    if st.button("Fetch Jobs"):
+        with st.spinner("Fetching..."):
+            job_data = await fetch_jobs(url)
+            st.success("Jobs Fetched!")
+            if job_data:
+                html_code = generate_elemets(job_data)
+            else:
+                st.write("No jobs found.")
+
+    if st.button("Build Resume", type="primary"):
+        # Check if the required fields are not empty
+        if not all([first_name, last_name, email, phone]):
+            st.error("Please fill in all required fields.")
+        else:
+            with st.spinner(
+                "Generating the resume..."
+            ):  # This ensures the spinner shows while the function is running
+                success, result = generate_resume_pdf(
+                    first_name, last_name, linkedin_URL, email, phone
+                )
+                if success:
+                    st.success("Resume Generated!")
+                    st.markdown(
+                        f'<a href="{result}" target="_blank">Download Resume</a>',
+                        unsafe_allow_html=True,
+                    )  # Display the PDF file
+                else:
+                    st.error(result)  # Display the error message
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+
+
+# ---------------------------- Inject custom CSS to style the page and especially the modal ----------------------------
 st.markdown(
     """
 <style>
@@ -512,3 +471,4 @@ body [data-testid="stVerticalBlockBorderWrapper"] div[data-modal-container='true
 """,
     unsafe_allow_html=True,
 )
+# ---------------------------- Inject custom CSS to style the page and especially the modal ----------------------------
