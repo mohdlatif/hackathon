@@ -1,8 +1,19 @@
+import asyncio
+import signal
+import traceback
+import nest_asyncio
+import pyppeteer
 import requests
+from bs4 import BeautifulSoup
+import re
 import json
+
 import streamlit as st
-import streamlit.components.v1 as components
+from streamlit_float import *
+from streamlit_extras.stylable_container import stylable_container
+from streamlit_extras.vertical_slider import vertical_slider
 from streamlit_modal import Modal
+import streamlit.components.v1 as components
 
 import os
 
@@ -12,13 +23,40 @@ from langchain_core.prompts import ChatPromptTemplate
 
 # from streamlit_chat import message
 
+
+nest_asyncio.apply()
+# create a strong reference to tasks since asyncio doesn't do this for you
+task_references = set()
+
+# ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
+customUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
+
+headers = {
+    "user-agent": customUA,
+    "Accept-Encoding": "*",
+    "accept-language": "en-US,en;q=0.7",
+    "Referer": "https://www.google.com/",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "document",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "same-origin",
+    "sec-fetch-user": "?1",
+    "sec-gpc": "1",
+    "upgrade-insecure-requests": "1",
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+}
+# ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
+
+
+# echo "export OPENAI_API_KEY='sk-xxxxxxxxxx'" >> ~/.zshrc
 # Setting the API key
 openai_api_key = os.environ["OPENAI_API_KEY"]
 
 
-# Define your function to generate a response
+# Define function to generate a response
 def generate_response(input_text):
-    # Initialize the chat model with your OpenAI API key
+    # Initialize the chat model with OpenAI API key
     llm = ChatOpenAI(openai_api_key=openai_api_key)
 
     # Create a prompt template with the initial context and the user's input
@@ -55,6 +93,38 @@ with st.form("my_form"):
     if submitted:
         generate_response(text)
 
+# ---------------------------- Cities ----------------------------
+cities_in_saudi = {
+    "Riyadh": "Riyadh",
+    "Jeddah": "Jeddah",
+    "Mecca": "Mecca",
+    "Medina": "Medina",
+    "Dammam": "Dammam",
+    "Asir": "Asir",
+    "Tabuk": "Tabuk",
+    "Khobar": "Khobar",
+    "Qatif": "Qatif",
+    "Taif": "Taif",
+    "Buraidah": "Buraidah",
+    "Al-Ahsa": "Al-Ahsa",
+    "Jubail": "Jubail",
+    "Hail": "Hail",
+    "Al-Kharj": "Al-Kharj",
+    "Yanbu": "Yanbu",
+    "Abha": "Abha",
+    "Najran": "Najran",
+    "Jizan": "Jizan",
+    "Sakaka": "Sakaka",
+    "Al-Baha": "Al-Baha",
+    "Eastern Province": "Eastern Province",
+    "All Saudia": "Saudi Arabia",
+}
+
+selected_cities = []
+
+
+# st.write("loca:", selected_cities)
+# ---------------------------- Cities ----------------------------
 
 c1, c2, c3 = st.columns(3)
 with c1:
@@ -75,11 +145,13 @@ with c5:
     phone = st.text_input("Phone", "", placeholder="0597593221")
 with c6:
     with st.popover("Location"):
-        st.markdown("Hello World 👋")
-        name = st.text_input("What's your name?")
+        st.markdown("Choose your preferred work locations")
+        for city_name, city_value in cities_in_saudi.items():
+            if st.checkbox(city_name, key=city_value):
+                selected_cities.append(city_value)
 
 
-st.write("Your name:", name)
+# st.write("Your name:", name)
 
 
 # ---------------------------- Generate PDF ----------------------------
@@ -91,7 +163,7 @@ def generate_resume_pdf(first_name, last_name, linkedin_URL, email, phone):
 
     headers = {
         "Content-Type": "application/json",
-        "X-API-KEY": "31ed2630e388204290c6e198fd8c9c7d10b2109ec090c1b9565f3bfc2a42c0ba",
+        "X-API-KEY": os.environ["CROVE_API_KEY"],
     }
 
     json_body = {
@@ -173,44 +245,6 @@ if st.button("Build Resume", type="primary"):
                 st.error(result)  # Display the error message
 
 # ---------------------------- Generate PDF ----------------------------
-
-
-# ---------------------------- Cities ----------------------------
-cities_in_saudi = {
-    "Riyadh": "Riyadh",
-    "Jeddah": "Jeddah",
-    "Mecca": "Mecca",
-    "Medina": "Medina",
-    "Dammam": "Dammam",
-    "Asir": "Asir",
-    "Tabuk": "Tabuk",
-    "Khobar": "Khobar",
-    "Qatif": "Qatif",
-    "Taif": "Taif",
-    "Buraidah": "Buraidah",
-    "Al-Ahsa": "Al-Ahsa",
-    "Jubail": "Jubail",
-    "Hail": "Hail",
-    "Al-Kharj": "Al-Kharj",
-    "Yanbu": "Yanbu",
-    "Abha": "Abha",
-    "Najran": "Najran",
-    "Jizan": "Jizan",
-    "Sakaka": "Sakaka",
-    "Al-Baha": "Al-Baha",
-    "Eastern Province": "Eastern Province",
-    "All Saudia": "Saudi Arabia",
-}
-
-selected_cities = []
-
-
-for city_name, city_value in cities_in_saudi.items():
-    if st.checkbox(city_name, key=city_value):
-        selected_cities.append(city_value)
-
-st.write("loca:", selected_cities)
-# ---------------------------- Cities ----------------------------
 
 
 json_data = [
