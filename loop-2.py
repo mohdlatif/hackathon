@@ -17,7 +17,7 @@ import streamlit.components.v1 as components
 
 import os
 
-# import openai
+
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 
@@ -25,7 +25,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 
 nest_asyncio.apply()
-# create a strong reference to tasks since asyncio doesn't do this for you
+# create a strong reference to tasks since asyncio doesn't do this
 task_references = set()
 
 # ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
@@ -52,6 +52,9 @@ headers = {
 # echo "export OPENAI_API_KEY='sk-xxxxxxxxxx'" >> ~/.zshrc
 # Setting the API key
 openai_api_key = os.environ["OPENAI_API_KEY"]
+
+
+# ---------------------------- LLM with Langchain ----------------------------
 
 
 # Define function to generate a response
@@ -82,6 +85,9 @@ def generate_response(input_text):
     )
     st.info(response.content)
     return response
+
+
+# ---------------------------- LLM with Langchain ----------------------------
 
 
 with st.form("my_form"):
@@ -117,14 +123,48 @@ cities_in_saudi = {
     "Sakaka": "Sakaka",
     "Al-Baha": "Al-Baha",
     "Eastern Province": "Eastern Province",
-    "All Saudia": "Saudi Arabia",
+    "All locations": "Saudi Arabia",
 }
 
 selected_cities = []
 
-
-# st.write("loca:", selected_cities)
 # ---------------------------- Cities ----------------------------
+
+
+# ---------------------------- Clean Text ----------------------------
+def clean_text(text):
+    # Regular expression to match any HTML tag
+    pattern = r"<[^>]*>"
+
+    # Remove tags using re.sub while preserving whitespaces within elements
+    clean_text_with_tags = re.sub(pattern, " ", text)
+
+    # Remove leading/trailing whitespace and apply additional cleaning as needed
+    clean_text = clean_text_with_tags.strip()
+
+    return clean_text
+
+
+# ---------------------------- Clean Text ----------------------------
+
+
+# ---------------------------- Generate HTML to display job results ----------------------------
+def generate_html(jobs):
+    html_str = '<div class="container">'
+    for job in jobs:
+        html_str += f"""
+            <div class="ops">
+                <h2>{job['Title']}</h2>
+                <p>{job['Company']}</p>
+                <p>{job['Location']}</p>
+                <p><a href="{job['Job URL']}">Job Link</a></p>
+            </div>
+        """
+    html_str += "</div>"
+    return html_strs
+
+
+# ---------------------------- Generate HTML to display job results ----------------------------
 
 c1, c2, c3 = st.columns(3)
 with c1:
