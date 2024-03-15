@@ -55,29 +55,13 @@ def generate_resume_pdf():
     }
 
     response = requests.post(url, headers=headers, json=json_body)
-    print(response.json)
-    print("------------")
-    response_json = json.dumps(response)
-    print(response_json[0].get("latest_pdf", None))
-    # if response.status_code == 200:
-    #     # Parse the JSON response
-    #     json_response = response.json()
-    #     # Assuming the JSON response is a list of dictionaries and you're interested in the first item
-    #     if json_response and isinstance(json_response, list) and len(json_response) > 0:
-    #         print(json_response)
-    #         latest_pdf = json_response[0].get("latest_pdf", None)
-    #         print(latest_pdf)
-    #         if latest_pdf is not None:
-    #             print(f"The value of latest_pdf is: {latest_pdf}")
-
-    #         else:
-    #             print("The key 'latest_pdf' was not found in the response.")
-    #     else:
-    #         print(
-    #             "The response JSON is not in the expected format (a list of dictionaries)."
-    #         )
-    # else:
-    #     print(f"Failed to make a request. Status code: {response.status_code}")
+    if response.status_code == 200:
+        # Parse the JSON response
+        json_response = response.json()
+        pdfFile = json_response["latest_pdf"]
+        print(pdfFile)
+    else:
+        print(f"Failed to make a request. Status code: {response.status_code}")
 
 
 # Call the function

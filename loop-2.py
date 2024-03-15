@@ -1,4 +1,5 @@
 import requests
+import json
 import streamlit as st
 import streamlit.components.v1 as components
 from streamlit_modal import Modal
@@ -62,21 +63,117 @@ with c2:
     last_name = st.text_input("Last name", "", placeholder="Abdulatef")
 with c3:
     linkedin_URL = st.text_input(
-        "Linkedin URL", "", placeholder="https://www.linkedin.com/in/[username]/"
+        "Linkedin/Website URL",
+        "",
+        placeholder="https://www.linkedin.com/in/[username]/",
     )
 
-c3, c4, c5 = st.columns(3)
-with c3:
-    email = st.text_input("Email", "", placeholder="Mohammed@gmail.com")
+c4, c5, c6 = st.columns(3)
 with c4:
-    phone = st.text_input("Phone", "", placeholder="0597593221")
+    email = st.text_input("Email", "", placeholder="Mohammed@gmail.com")
 with c5:
+    phone = st.text_input("Phone", "", placeholder="0597593221")
+with c6:
     with st.popover("Location"):
         st.markdown("Hello World 👋")
         name = st.text_input("What's your name?")
 
 
 st.write("Your name:", name)
+
+
+# ---------------------------- Generate PDF ----------------------------
+
+
+def generate_resume_pdf(first_name, last_name, linkedin_URL, email, phone):
+    full_name = first_name + "_" + last_name
+    url = "https://v2.api.crove.app/api/integrations/external/helpers/generate-pdf-from-template/"  # Replace this with the actual API URL
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-API-KEY": "31ed2630e388204290c6e198fd8c9c7d10b2109ec090c1b9565f3bfc2a42c0ba",
+    }
+
+    json_body = {
+        "template_id": "f17b9c42-f624-4f90-a876-7c6a5b61e60e",
+        "name": full_name,
+        "background_mode": False,
+        "response": {
+            "1710497701667": first_name,
+            "1710498021979": last_name,
+            "1710508712281": email,
+            "1710508742943": phone,
+            "1710509102577": "about",
+            "1710528829666": "core1",
+            "1710528834175": "core2",
+            "1710528850008": "core3",
+            "1710528101361": "edu1",
+            "1710528162961": "edu1location",
+            "1710528143880": "edu1course",
+            "1710528109425": "20/03/2024",
+            "1710528933896": "edu2",
+            "1710528951137": "edu2location",
+            "1710528987364": "edu3course",
+            "1710529004648": "30/03/2024",
+            "1710529715794": "job1",
+            "1710529728616": "job1location",
+            "1710529758192": "job1position",
+            "1710529770167": "29/03/2024",
+            "1710530023914": "job2",
+            "1710530034695": "job2location",
+            "1710530048888": "job2position",
+            "1710530057718": "27/03/2024",
+            "1710530088944": "Job1skills1 \n new line \n ldsif sd\n gfgg \t dsfds \r bbbbb",
+            "1710530096768": "Job1skills2",
+            "1710530226497": "skill1",
+            "1710530230911": "Skill2",
+            "1710530235695": "Skill3",
+            "1710530239991": "Skill4",
+            "1710530248687": "Skill5",
+            "1710530254678": "Skill6",
+            "1710530259655": "Skill7",
+            "1710530265621": "Skill8",
+            "1710534118133": "Skill9",
+        },
+    }
+    if linkedin_URL:  # This checks if linkedin_URL is neither empty nor None
+        json_body["response"]["1710508795514"] = linkedin_URL
+
+    response = requests.post(url, headers=headers, json=json_body)
+    if response.status_code == 200:
+        # Parse the JSON response
+        json_response = response.json()
+        pdfFile = json_response["latest_pdf"]
+        return True, pdfFile  # Return a tuple indicating success and the PDF file
+    else:
+        return (
+            False,
+            f"Failed to make a request. Status code: {response.status_code}",
+        )  # Indicate failure and the status code
+
+
+if st.button("Build Resume", type="primary"):
+    # Check if the required fields are not empty
+    if not all([first_name, last_name, email, phone]):
+        st.error("Please fill in all required fields.")
+    else:
+        with st.spinner(
+            "Generating the resume..."
+        ):  # This ensures the spinner shows while the function is running
+            success, result = generate_resume_pdf(
+                first_name, last_name, linkedin_URL, email, phone
+            )
+            if success:
+                st.success("Resume Generated!")
+                st.markdown(
+                    f'<a href="{result}" target="_blank">Download Resume</a>',
+                    unsafe_allow_html=True,
+                )  # Display the PDF file
+            else:
+                st.error(result)  # Display the error message
+
+# ---------------------------- Generate PDF ----------------------------
+
 
 # ---------------------------- Cities ----------------------------
 cities_in_saudi = {
@@ -114,89 +211,6 @@ for city_name, city_value in cities_in_saudi.items():
 
 st.write("loca:", selected_cities)
 # ---------------------------- Cities ----------------------------
-
-
-# ---------------------------- Generate PDF ----------------------------
-
-
-def generate_resume_pdf():
-    url = "https://v2.api.crove.app/api/integrations/external/helpers/generate-pdf-from-template/"  # Replace this with the actual API URL
-
-    headers = {
-        "Content-Type": "application/json",
-        "X-API-KEY": "31ed2630e388204290c6e198fd8c9c7d10b2109ec090c1b9565f3bfc2a42c0ba",
-    }
-
-    json_body = {
-        "template_id": "f17b9c42-f624-4f90-a876-7c6a5b61e60e",
-        "name": "tt-f2",
-        "background_mode": False,
-        "response": {
-            "1710497701667": "first_name",
-            "1710498021979": "last_name",
-            "1710508712281": "email@gmail.com",
-            "1710508742943": "0116230084",
-            "1710508795514": "https://linkedin.com/ff",
-            "1710509102577": "about",
-            "1710528829666": "core1",
-            "1710528834175": "core2",
-            "1710528850008": "core3",
-            "1710528101361": "edu1",
-            "1710528162961": "edu1location",
-            "1710528143880": "edu1course",
-            "1710528109425": "20/03/2024",
-            "1710528933896": "edu2",
-            "1710528951137": "edu2location",
-            "1710528987364": "edu3course",
-            "1710529004648": "30/03/2024",
-            "1710529715794": "job1",
-            "1710529728616": "job1location",
-            "1710529758192": "job1position",
-            "1710529770167": "29/03/2024",
-            "1710530023914": "job2",
-            "1710530034695": "job2location",
-            "1710530048888": "job2position",
-            "1710530057718": "27/03/2024",
-            "1710530088944": "Job1skills1 \n new line \n ldsif sd\n gfgg \t dsfds \r bbbbb",
-            "1710530096768": "Job1skills2",
-            "1710530226497": "skill1",
-            "1710530230911": "Skill2",
-            "1710530235695": "Skill3",
-            "1710530239991": "Skill4",
-            "1710530248687": "Skill5",
-            "1710530254678": "Skill6",
-            "1710530259655": "Skill7",
-            "1710530265621": "Skill8",
-            "1710534118133": "Skill9",
-        },
-    }
-
-    response = requests.post(url, headers=headers, json=json_body)
-
-    if response.status_code == 200:
-        # Parse the JSON response
-        json_response = response.json()
-
-        # Assuming the JSON response is a list of dictionaries and you're interested in the first item
-        if json_response and isinstance(json_response, list) and len(json_response) > 0:
-            st.write(json_response)
-            latest_pdf = json_response[0].get("latest_pdf", None)
-            st.write(latest_pdf)
-            if latest_pdf is not None:
-                print(f"The value of latest_pdf is: {latest_pdf}")
-                st.write(latest_pdf)
-            else:
-                print("The key 'latest_pdf' was not found in the response.")
-        else:
-            print(
-                "The response JSON is not in the expected format (a list of dictionaries)."
-            )
-    else:
-        print(f"Failed to make a request. Status code: {response.status_code}")
-
-
-# Call the function
-generate_resume_pdf()
 
 
 json_data = [
