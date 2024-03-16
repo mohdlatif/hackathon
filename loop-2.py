@@ -1,8 +1,8 @@
 import asyncio
 
-import signal
-import traceback
-import nest_asyncio
+# import signal
+# import traceback
+# import nest_asyncio
 import pyppeteer
 import requests
 from bs4 import BeautifulSoup
@@ -24,9 +24,9 @@ from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 
 
-nest_asyncio.apply()
-# create a strong reference to tasks since asyncio doesn't do this
-task_references = set()
+# nest_asyncio.apply()
+# # create a strong reference to tasks since asyncio doesn't do this
+# task_references = set()
 
 # ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
 customUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
