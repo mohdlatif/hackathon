@@ -25,7 +25,7 @@ load_dotenv()
 
 
 nest_asyncio.apply()
-# # create a strong reference to tasks since asyncio doesn't do this
+# create a strong reference to tasks since asyncio doesn't do this
 task_references = set()
 
 # ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
@@ -51,7 +51,7 @@ headers = {
 
 # ---------------------------- Setting the API keys ----------------------------
 
-
+# I suppose to hide my APIs, but for transparency I decided to share them.
 openai_api_key = os.getenv("OPENAI_API_KEY")
 browserless_api_key = "4795f0e6-6128-4155-a56f-2b09cbf14afe"
 crove_api_key = "31ed2630e388204290c6e198fd8c9c7d10b2109ec090c1b9565f3bfc2a42c0ba"
@@ -62,18 +62,115 @@ linkedin_api_url = "https://www.linkedin.com/jobs-guest/jobs/api"
 
 
 # Define function to generate a response
-def generate_response(input_text):
+def generate_response(
+    first_name,
+    last_name,
+    email,
+    phone,
+    edu1,
+    linkedin_URL,
+    edu1location,
+    edu1course,
+    edu1date,
+    edu2,
+    edu2location,
+    edu2course,
+    edu2date,
+    job1,
+    job1location,
+    job1position,
+    job1date,
+    job2,
+    job2location,
+    job2position,
+    job2date,
+    desired_job,
+    job_description,
+):
     # Initialize the chat model with OpenAI API key
     llm = ChatOpenAI(openai_api_key=openai_api_key)
+    resume_prompt = f"""
+    Your name is Rezbot, and you were created for mainly one reason: writing professional resumes. You must act like a top-notch resume writer with over 20 years of experience in this domain. Here are the details of the resume:
+
+    Person name: 
+    {first_name} {last_name}
+    Education:
+    Studied at the {edu1} in {edu1course} from {edu1date} in {edu1location}
+    Obtained a {edu2course} degree from the {edu2}  from {edu2date} in {edu2location}
+
+    Work experience:
+
+    Worked at {job1} company as a {job1position} from {job1date}
+    Worked as a {job2position} at {job2} from {job2date}
+
+    {first_name} is now seeking to apply for a job as a {desired_job}. You must find strengths between his skills, education, and the job description, and use them to write a powerful resume.
+    Job description: {job_description}
+
+    I want you to write the following for the resume:
+
+    A resume summary
+    3 core competencies
+    9 technical skills
+    For each job in Mohammed's career history, provide 2 quantified measures of his achievements or impact.
+    The final output should replace each value with the generated content. Put the generated content in the correct JSON field, where the field name is mentioned, such as "resume_summary", "core_competencies_1", "Technical_skill_1", "Job_1_skills_1", "Job_1_skills_2", etc. Please ensure that you do not use brackets or arrays for fields like "Job_1_skills_1" and "Job_1_skills_2". Instead, provide the values separately.    
+    User
+    Your name is Rezbot, and you were created for mainly one reason: writing professional resumes. You must act like a top-notch resume writer with over 20 years of experience in this domain. Here are the details of the resume:
+
+    Here's the JSON template:
+    "template_id": "f17b9c42-f624-4f90-a876-7c6a5b61e60e",
+    "name": "first_name_last_name",
+    "background_mode": false,
+    "response": 
+        "1710497701667": {first_name},
+        "1710498021979": {last_name},
+        "1710508712281": {email},
+        "1710508742943": {phone},
+        "1710508795514": {linkedin_URL},
+        "1710509102577": "resume_summary",
+        "1710528829666": "core_competencies_1",
+        "1710528834175": "core_competencies_2",
+        "1710528850008": "core_competencies_3",
+        "1710528101361": "edu1",
+        "1710528162961": "edu1location",
+        "1710528143880": "edu1course",
+        "1710528109425": "20/03/2024",
+        "1710528933896": "edu2",
+        "1710528951137": "edu2location",
+        "1710528987364": "edu3course",
+        "1710529004648": "30/03/2024",
+        "1710529715794": "job1",
+        "1710529728616": "job1location",
+        "1710529758192": "job1position",
+        "1710529770167": "29/03/2024",
+        "1710530023914": "job2",
+        "1710530034695": "job2location",
+        "1710530048888": "job2position",
+        "1710530057718": "27/03/2024",
+        "1710530088944": "Job_1_skills_1",
+        "1710530096768": "Job_1_skills_2",
+        "1710530226497": "Technical_skill_1",
+        "1710530230911": "Technical_skill_2",
+        "1710530235695": "Technical_skill_3",
+        "1710530239991": "Technical_skill_4",
+        "1710530248687": "Technical_skill_5",
+        "1710530254678": "Technical_skill_6",
+        "1710530259655": "Technical_skill_7",
+        "1710530265621": "Technical_skill_8",
+        "1710534118133": "Technical_skill_9"
+    
+        
+        
+        
+        
+    """
 
     # Create a prompt template with the initial context and the user's input
     prompt_template = ChatPromptTemplate.from_messages(
         [
             (
                 "system",
-                "You are RezBot, a bot that aims to help people find their job.",
-            ),
-            ("user", input_text),
+                resume_prompt,
+            )
         ]
     )
 
@@ -83,7 +180,7 @@ def generate_response(input_text):
     # Generate the response from the LLM
     response = llm.invoke(
         chat_prompt,
-        max_tokens=100,  # Set the maximum number of tokens to generate
+        max_tokens=4096,  # Set the maximum number of tokens to generate
         n=1,  # Generate 1 completion for the prompt
         stop=None,  # No specific stop sequence
     )
@@ -154,8 +251,6 @@ def jobs_display(jobs_display):
     # Create Columns
     columns = st.columns(num_columns_per_row)
 
-    # Assuming you have a variable `num_columns_per_row` defined
-    # and a Streamlit columns setup `columns`
     for index, job in enumerate(jobs_display):
         column_index = index % num_columns_per_row
         with columns[column_index]:
@@ -462,16 +557,7 @@ async def main():
                     html_code = jobs_display(job_data)
                 else:
                     st.write("No jobs found.")
-
-    # with st.form("my_form"):
-    #     text = st.text_area(
-    #         "Enter text:",
-    #         "Who are you and what you do?",
-    #     )
-    #     submitted = st.form_submit_button("Submit")
-    #     if submitted:
-    #         generate_response(text)
-
+    job_description = "5 years of expierence"
     if build_resume_clicked:
         # Check if the required fields are not empty
         if not all(
@@ -479,6 +565,7 @@ async def main():
                 first_name,
                 last_name,
                 email,
+                linkedin_UR,
                 phone,
                 edu1,
                 edu1location,
@@ -500,6 +587,32 @@ async def main():
         ):
             st.error("Please fill in all required fields.")
         else:
+            x = generate_response(
+                first_name,
+                last_name,
+                email,
+                phone,
+                edu1,
+                linkedin_URL,
+                edu1location,
+                edu1course,
+                edu1date,
+                edu2,
+                edu2location,
+                edu2course,
+                edu2date,
+                job1,
+                job1location,
+                job1position,
+                job1date,
+                job2,
+                job2location,
+                job2position,
+                job2date,
+                desired_job,
+                job_description,
+            )
+            st.write(x)
             with st.spinner(
                 "Generating the resume..."
             ):  # This ensures the spinner shows while the function is running
