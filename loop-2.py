@@ -27,9 +27,9 @@ from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 
 
-nest_asyncio.apply()
-# create a strong reference to tasks since asyncio doesn't do this
-task_references = set()
+# nest_asyncio.apply()
+# # create a strong reference to tasks since asyncio doesn't do this
+# task_references = set()
 
 # ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
 customUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
@@ -167,26 +167,21 @@ def generate_html(jobs):
 
 
 # ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
-def create_view_button(job, index):
-    # Unique key for each button based on job index
-    button_key = f"view_button_{index}"
 
-    # Instantiate the Modal object
-    # modal = Modal(title=f"job['Title']", key=f"modal_key_{index}")
-    modal = Modal(title=job["Title"], key=f"modal_key_{index}")
-    # Button to open the modal
-    if st.button("View Title", key=button_key):
-        modal.open()
 
-    if modal.is_open():
-        with modal.container():
-            st.write("Job Details")
+def jobs_display(jobs_display):
+    # Layout Parameters
+    num_columns_per_row = 3
 
-            st.write("Some fancy text")
-            value = st.checkbox("Check me")
-            st.write(f"Checkbox checked: {value}")
-            if st.button("Close", key=f"close_modal_{index}"):
-                modal.close()
+    # Create Columns
+    columns = st.columns(num_columns_per_row)
+
+    # Assuming you have a variable `num_columns_per_row` defined
+    # and a Streamlit columns setup `columns`
+    for index, job in enumerate(jobs_display):
+        column_index = index % num_columns_per_row
+        with columns[column_index]:
+            create_job_div(job, index)
 
 
 def create_job_div(job, index):
@@ -205,19 +200,25 @@ def create_job_div(job, index):
         create_view_button(job, index)
 
 
-def jobs_display():
-    # Layout Parameters
-    num_columns_per_row = 3
+def create_view_button(job, index):
+    # Unique key for each button based on job index
+    button_key = f"view_button_{index}"
 
-    # Create Columns
-    columns = st.columns(num_columns_per_row)
+    # Instantiate the Modal object
+    modal = Modal(title=job["Title"], key=f"modal_key_{index}")
+    # Button to open the modal
+    if st.button("View Title", key=button_key):
+        modal.open()
 
-    # Assuming you have a variable `num_columns_per_row` defined
-    # and a Streamlit columns setup `columns`
-    for index, job in enumerate(json_data):
-        column_index = index % num_columns_per_row
-        with columns[column_index]:
-            create_job_div(job, index)
+    if modal.is_open():
+        with modal.container():
+            st.write("Job Details")
+
+            st.write("Some fancy text")
+            value = st.checkbox("Check me")
+            st.write(f"Checkbox checked: {value}")
+            if st.button("Close", key=f"close_modal_{index}"):
+                modal.close()
 
 
 # ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
@@ -372,7 +373,7 @@ def linkedinURL(desired_job, selected_cities_str):
         + desired_job
         + "&location="
         + selected_cities_str
-        + "&start=0"
+        + "&pageNum=0&original_referer="
     )
     return url
 
@@ -397,16 +398,7 @@ async def main():
         st.write("Please specify the job title you are applying for.")
         desired_job = st.text_input("Job title", "", placeholder="Data Engineer")
 
-        if st.button("Fetch Jobs", type="primary"):
-            with st.spinner("Fetching..."):
-                job_data = await fetch_jobs(
-                    linkedinURL(desired_job, selected_cities_str)
-                )
-                st.success("Jobs Fetched!")
-                if job_data:
-                    html_code = generate_elemets(job_data)
-                else:
-                    st.write("No jobs found.")
+        fetch_jobs_clicked = st.button("Fetch Jobs")
 
         st.write("Lets gather basic info of you")
         c1, c2 = st.columns(2)
@@ -426,6 +418,15 @@ async def main():
             email = st.text_input("Email", "", placeholder="Mohammed@gmail.com")
         with c5:
             phone = st.text_input("Phone", "", placeholder="0597593221")
+
+    if fetch_jobs_clicked:
+        with st.spinner("Fetching..."):
+            job_data = await fetch_jobs(linkedinURL(desired_job, selected_cities_str))
+            st.success("Jobs Fetched!")
+            if job_data:
+                html_code = jobs_display(job_data)
+            else:
+                st.write("No jobs found.")
 
     with st.form("my_form"):
         text = st.text_area(
