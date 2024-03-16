@@ -184,8 +184,8 @@ def generate_response(
         n=1,  # Generate 1 completion for the prompt
         stop=None,  # No specific stop sequence
     )
-    st.info(response.content)
-    return response
+    # st.info(response.content)
+    return response.content
 
 
 # ---------------------------- LLM with Langchain ----------------------------
@@ -355,7 +355,7 @@ async def fetch_jobs(url):
 # ---------------------------- Generate PDF ----------------------------
 
 
-def generate_resume_pdf(first_name, last_name, linkedin_URL, email, phone):
+def generate_resume_pdf(jjson):
     full_name = first_name + "_" + last_name
     url = "https://v2.api.crove.app/api/integrations/external/helpers/generate-pdf-from-template/"  # Replace this with the actual API URL
 
@@ -364,52 +364,10 @@ def generate_resume_pdf(first_name, last_name, linkedin_URL, email, phone):
         "X-API-KEY": crove_api_key,
     }
 
-    json_body = {
-        "template_id": "f17b9c42-f624-4f90-a876-7c6a5b61e60e",
-        "name": full_name,
-        "background_mode": False,
-        "response": {
-            "1710497701667": first_name,
-            "1710498021979": last_name,
-            "1710508712281": email,
-            "1710508742943": phone,
-            "1710509102577": "about",
-            "1710528829666": "core1",
-            "1710528834175": "core2",
-            "1710528850008": "core3",
-            "1710528101361": "edu1",
-            "1710528162961": "edu1location",
-            "1710528143880": "edu1course",
-            "1710528109425": "20/03/2024",
-            "1710528933896": "edu2",
-            "1710528951137": "edu2location",
-            "1710528987364": "edu3course",
-            "1710529004648": "30/03/2024",
-            "1710529715794": "job1",
-            "1710529728616": "job1location",
-            "1710529758192": "job1position",
-            "1710529770167": "29/03/2024",
-            "1710530023914": "job2",
-            "1710530034695": "job2location",
-            "1710530048888": "job2position",
-            "1710530057718": "27/03/2024",
-            "1710530088944": "Job1skills1 \n new line \n ldsif sd\n gfgg \t dsfds \r bbbbb",
-            "1710530096768": "Job1skills2",
-            "1710530226497": "skill1",
-            "1710530230911": "Skill2",
-            "1710530235695": "Skill3",
-            "1710530239991": "Skill4",
-            "1710530248687": "Skill5",
-            "1710530254678": "Skill6",
-            "1710530259655": "Skill7",
-            "1710530265621": "Skill8",
-            "1710534118133": "Skill9",
-        },
-    }
-    if linkedin_URL:  # This checks if linkedin_URL is neither empty nor None
-        json_body["response"]["1710508795514"] = linkedin_URL
+    # if linkedin_URL:  # This checks if linkedin_URL is neither empty nor None
+    #     json_body["response"]["1710508795514"] = linkedin_URL
 
-    response = requests.post(url, headers=headers, json=json_body)
+    response = requests.post(url, headers=headers, json=jjson)
     if response.status_code == 200:
         # Parse the JSON response
         json_response = response.json()
@@ -587,38 +545,35 @@ async def main():
         ):
             st.error("Please fill in all required fields.")
         else:
-            x = generate_response(
-                first_name,
-                last_name,
-                email,
-                phone,
-                edu1,
-                linkedin_URL,
-                edu1location,
-                edu1course,
-                edu1date,
-                edu2,
-                edu2location,
-                edu2course,
-                edu2date,
-                job1,
-                job1location,
-                job1position,
-                job1date,
-                job2,
-                job2location,
-                job2position,
-                job2date,
-                desired_job,
-                job_description,
-            )
-            st.write(x)
-            with st.spinner(
-                "Generating the resume..."
-            ):  # This ensures the spinner shows while the function is running
-                success, result = generate_resume_pdf(
-                    first_name, last_name, linkedin_URL, email, phone
+            with st.spinner("Generating the resume..."):
+                # Get OpenAI JSON object
+                jjson = generate_response(
+                    first_name,
+                    last_name,
+                    email,
+                    phone,
+                    edu1,
+                    linkedin_URL,
+                    edu1location,
+                    edu1course,
+                    edu1date,
+                    edu2,
+                    edu2location,
+                    edu2course,
+                    edu2date,
+                    job1,
+                    job1location,
+                    job1position,
+                    job1date,
+                    job2,
+                    job2location,
+                    job2position,
+                    job2date,
+                    desired_job,
+                    job_description,
                 )
+                # This ensures the spinner shows while the function is running
+                success, result = generate_resume_pdf(jjson)
                 if success:
                     st.success("Resume Generated!")
                     st.markdown(
