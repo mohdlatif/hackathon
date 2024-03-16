@@ -58,6 +58,7 @@ headers = {
 openai_api_key = os.getenv("OPENAI_API_KEY")
 browserless_api_key = os.getenv("BROWSERLESS_API_KEY")
 crove_api_key = os.getenv("CROVE_API_KEY")
+linkedin_api_url = os.getenv("LINKEDIN_API_URL")
 # ---------------------------- Setting the API keys ----------------------------
 
 # ---------------------------- LLM with Langchain ----------------------------
@@ -124,6 +125,7 @@ cities_in_saudi = {
 }
 
 selected_cities = []
+
 
 # ---------------------------- Cities ----------------------------
 
@@ -362,13 +364,68 @@ def generate_resume_pdf(first_name, last_name, linkedin_URL, email, phone):
 
 
 # ---------------------------- Generate PDF ----------------------------
+# ---------------------------- Linkedin URL ----------------------------
+def linkedinURL(desired_job, selected_cities_str):
+    url = (
+        linkedin_api_url
+        + "/seeMoreJobPostings/search?keywords="
+        + desired_job
+        + "&location="
+        + selected_cities_str
+        + "&start=0"
+    )
+    return url
 
 
-url = "https://www.linkedin.com/jobs-guest/jobs/api/seeMoreJobPostings/search?keywords=hr&location=Eastern,%20Saudi%20Arabia&start=0"
+# ---------------------------- Linkedin URL ----------------------------
 
 
 async def main():
+    st.set_page_config(page_title="RezBot", page_icon="📝")
     st.title("RezBot")
+
+    with st.sidebar:
+
+        st.write("Choose your work locations")
+        with st.popover("Location"):
+            st.markdown("Choose your preferred work locations")
+            for city_name, city_value in cities_in_saudi.items():
+                if st.checkbox(city_name, key=city_value):
+                    selected_cities.append(city_value)
+                    selected_cities_str = "&".join(selected_cities)
+
+        st.write("Please specify the job title you are applying for.")
+        desired_job = st.text_input("Job title", "", placeholder="Data Engineer")
+
+        if st.button("Fetch Jobs", type="primary"):
+            with st.spinner("Fetching..."):
+                job_data = await fetch_jobs(
+                    linkedinURL(desired_job, selected_cities_str)
+                )
+                st.success("Jobs Fetched!")
+                if job_data:
+                    html_code = generate_elemets(job_data)
+                else:
+                    st.write("No jobs found.")
+
+        st.write("Lets gather basic info of you")
+        c1, c2 = st.columns(2)
+        with c1:
+            first_name = st.text_input("First name", "", placeholder="Mohammed")
+        with c2:
+            last_name = st.text_input("Last name", "", placeholder="Abdulatef")
+
+        linkedin_URL = st.text_input(
+            "Linkedin/Website URL",
+            "",
+            placeholder="https://www.linkedin.com/in/[username]/",
+        )
+
+        c4, c5 = st.columns(2)
+        with c4:
+            email = st.text_input("Email", "", placeholder="Mohammed@gmail.com")
+        with c5:
+            phone = st.text_input("Phone", "", placeholder="0597593221")
 
     with st.form("my_form"):
         text = st.text_area(
@@ -378,40 +435,6 @@ async def main():
         submitted = st.form_submit_button("Submit")
         if submitted:
             generate_response(text)
-
-    st.write("Lets gather basic info of you")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        first_name = st.text_input("First name", "", placeholder="Mohammed")
-    with c2:
-        last_name = st.text_input("Last name", "", placeholder="Abdulatef")
-    with c3:
-        linkedin_URL = st.text_input(
-            "Linkedin/Website URL",
-            "",
-            placeholder="https://www.linkedin.com/in/[username]/",
-        )
-
-    c4, c5, c6 = st.columns(3)
-    with c4:
-        email = st.text_input("Email", "", placeholder="Mohammed@gmail.com")
-    with c5:
-        phone = st.text_input("Phone", "", placeholder="0597593221")
-    with c6:
-        with st.popover("Location"):
-            st.markdown("Choose your preferred work locations")
-            for city_name, city_value in cities_in_saudi.items():
-                if st.checkbox(city_name, key=city_value):
-                    selected_cities.append(city_value)
-
-    if st.button("Fetch Jobs"):
-        with st.spinner("Fetching..."):
-            job_data = await fetch_jobs(url)
-            st.success("Jobs Fetched!")
-            if job_data:
-                html_code = generate_elemets(job_data)
-            else:
-                st.write("No jobs found.")
 
     if st.button("Build Resume", type="primary"):
         # Check if the required fields are not empty
@@ -467,6 +490,8 @@ body [data-testid="stVerticalBlockBorderWrapper"] div[data-modal-container='true
     h5 {
         color: #ad7d41;
     }
+
+   
 </style>
 """,
     unsafe_allow_html=True,
