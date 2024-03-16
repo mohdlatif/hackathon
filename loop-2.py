@@ -108,10 +108,10 @@ def generate_response(
 
     I want you to write the following for the resume:
 
-    A resume summary
-    3 core competencies
-    9 technical skills
-    For each job in Mohammed's career history, provide 2 quantified measures of his achievements or impact.
+    - A resume summary at least 120 words
+    - 3 core competencies with explination
+    - 9 technical skills
+    - For each job in {first_name}'s career history, provide at least 2 quantified measures of his achievements or impact in one sentence. content generated must explain very well
     The final output should replace each value with the generated content. Put the generated content in the correct JSON field, where the field name is mentioned, such as "resume_summary", "core_competencies_1", "Technical_skill_1", "Job_1_skills_1", "Job_1_skills_2", etc. Please ensure that you do not use brackets or arrays for fields like "Job_1_skills_1" and "Job_1_skills_2". Instead, provide the values separately.    
 
     Here's the JSON template, phone number must be in string format :
@@ -242,20 +242,94 @@ def clean_text(text):
 # ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
 
 
-def jobs_display(jobs_display):
+def jobs_display(
+    job_data,
+    first_name,
+    last_name,
+    email,
+    phone,
+    linkedin_URL,
+    edu1,
+    edu1location,
+    edu1course,
+    edu1date,
+    edu2,
+    edu2location,
+    edu2course,
+    edu2date,
+    job1,
+    job1location,
+    job1position,
+    job1date,
+    job2,
+    job2location,
+    job2position,
+    job2date,
+    desired_job,
+):
     # Layout Parameters
     num_columns_per_row = 3
 
     # Create Columns
     columns = st.columns(num_columns_per_row)
 
-    for index, job in enumerate(jobs_display):
+    for index, job in enumerate(job_data):
         column_index = index % num_columns_per_row
         with columns[column_index]:
-            create_job_div(job, index)
+            create_job_div(
+                job,
+                index,
+                first_name,
+                last_name,
+                email,
+                phone,
+                linkedin_URL,
+                edu1,
+                edu1location,
+                edu1course,
+                edu1date,
+                edu2,
+                edu2location,
+                edu2course,
+                edu2date,
+                job1,
+                job1location,
+                job1position,
+                job1date,
+                job2,
+                job2location,
+                job2position,
+                job2date,
+                desired_job,
+            )
 
 
-def create_job_div(job, index):
+def create_job_div(
+    job,
+    index,
+    first_name,
+    last_name,
+    email,
+    phone,
+    linkedin_URL,
+    edu1,
+    edu1location,
+    edu1course,
+    edu1date,
+    edu2,
+    edu2location,
+    edu2course,
+    edu2date,
+    job1,
+    job1location,
+    job1position,
+    job1date,
+    job2,
+    job2location,
+    job2position,
+    job2date,
+    desired_job,
+):
     with st.container():
         st.markdown(
             f"""
@@ -269,7 +343,46 @@ def create_job_div(job, index):
             unsafe_allow_html=True,
         )
         with st.expander("See explanation"):
-            st.write(job["jDetails"])
+            job_description = job["jDetails"]
+            st.write(job_description)
+            with st.spinner("Generating the resume..."):
+                # Get OpenAI JSON object
+                jjson = generate_response(
+                    first_name,
+                    last_name,
+                    email,
+                    phone,
+                    linkedin_URL,
+                    edu1,
+                    edu1location,
+                    edu1course,
+                    edu1date,
+                    edu2,
+                    edu2location,
+                    edu2course,
+                    edu2date,
+                    job1,
+                    job1location,
+                    job1position,
+                    job1date,
+                    job2,
+                    job2location,
+                    job2position,
+                    job2date,
+                    desired_job,
+                    job_description,
+                )
+
+                # This ensures the spinner shows while the function is running
+                success, result = generate_resume_pdf(jjson)
+                if success:
+                    st.success("Resume Generated!")
+                    st.markdown(
+                        f'<a href="{result}" target="_blank">Download Resume</a>',
+                        unsafe_allow_html=True,
+                    )  # Display the PDF file
+                else:
+                    st.error(result)  # Display the error message
 
 
 # ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
@@ -364,8 +477,8 @@ def generate_resume_pdf(jjson):
 
     # if linkedin_URL:  # This checks if linkedin_URL is neither empty nor None
     #     json_body["response"]["1710508795514"] = linkedin_URL
-
-    response = requests.post(url, headers=headers, json=jjson)
+    json_data = json.loads(jjson)
+    response = requests.post(url, headers=headers, json=json_data)
     if response.status_code == 200:
         # Parse the JSON response
         json_response = response.json()
@@ -497,8 +610,6 @@ async def main():
                 "Duration", "", placeholder="2020-2021", key="xmso"
             )
 
-        build_resume_clicked = st.button("Build Resume", type="primary")
-
     if fetch_jobs_clicked:
         # Check if the required fields are not empty
         if not all([desired_job, selected_cities_str]):
@@ -510,77 +621,34 @@ async def main():
                 )
                 st.success("Jobs Fetched!")
                 if job_data:
-                    html_code = jobs_display(job_data)
+                    # st.info(job_data)
+                    html_code = jobs_display(
+                        job_data,
+                        first_name,
+                        last_name,
+                        email,
+                        phone,
+                        linkedin_URL,
+                        edu1,
+                        edu1location,
+                        edu1course,
+                        edu1date,
+                        edu2,
+                        edu2location,
+                        edu2course,
+                        edu2date,
+                        job1,
+                        job1location,
+                        job1position,
+                        job1date,
+                        job2,
+                        job2location,
+                        job2position,
+                        job2date,
+                        desired_job,
+                    )
                 else:
                     st.write("No jobs found.")
-    job_description = "5 years of expierence"
-    if build_resume_clicked:
-        # Check if the required fields are not empty
-        if not all(
-            [
-                first_name,
-                last_name,
-                email,
-                linkedin_URL,
-                phone,
-                edu1,
-                edu1location,
-                edu1course,
-                edu1date,
-                edu2,
-                edu2location,
-                edu2course,
-                edu2date,
-                job1,
-                job1location,
-                job1position,
-                job1date,
-                job2,
-                job2location,
-                job2position,
-                job2date,
-            ]
-        ):
-            st.error("Please fill in all required fields.")
-        else:
-            with st.spinner("Generating the resume..."):
-                # Get OpenAI JSON object
-                jjson = generate_response(
-                    first_name,
-                    last_name,
-                    email,
-                    phone,
-                    edu1,
-                    linkedin_URL,
-                    edu1location,
-                    edu1course,
-                    edu1date,
-                    edu2,
-                    edu2location,
-                    edu2course,
-                    edu2date,
-                    job1,
-                    job1location,
-                    job1position,
-                    job1date,
-                    job2,
-                    job2location,
-                    job2position,
-                    job2date,
-                    desired_job,
-                    job_description,
-                )
-                st.info(jjson)
-                # This ensures the spinner shows while the function is running
-                success, result = generate_resume_pdf(jjson)
-                if success:
-                    st.success("Resume Generated!")
-                    st.markdown(
-                        f'<a href="{result}" target="_blank">Download Resume</a>',
-                        unsafe_allow_html=True,
-                    )  # Display the PDF file
-                else:
-                    st.error(result)  # Display the error message
 
 
 if __name__ == "__main__":
