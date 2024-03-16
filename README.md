@@ -4,9 +4,8 @@ you need to install the following packages
 `pip install asyncio pyppeteer requests bs4 streamlit dotenv langchain_openai langchain_core`
 
 Streamlit Cloud's memory restrictions (1GB) and potential CPU limitations made it unsuitable for this script. It was therefore hosted on a more powerful, dedicated server.
-Demo can be accessed through either:
-1- https://a875-2406-da18-605-6b00-7796-71e5-4272-a295.ngrok-free.app
-2- http://18.142.37.11:8501
+Demo can be accessed here:
+https://domain.ngrok.dev
 
 RezBot is more than just another resume builder. It's an intelligent solution designed to revolutionize the job search experience. We understand the pain points faced by job seekers – endless resume updates, overwhelming job boards, and frustrating application processes.  RezBot tackles these challenges head-on with a powerful combination of AI and automation.
 
