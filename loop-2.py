@@ -1,4 +1,5 @@
 import asyncio
+
 import signal
 import traceback
 import nest_asyncio
@@ -9,11 +10,7 @@ import re
 import json
 
 import streamlit as st
-from streamlit_float import *
-from streamlit_extras.stylable_container import stylable_container
-from streamlit_extras.vertical_slider import vertical_slider
 from streamlit_modal import Modal
-import streamlit.components.v1 as components
 
 import os
 from dotenv import load_dotenv
@@ -27,9 +24,9 @@ from langchain_core.prompts import ChatPromptTemplate
 load_dotenv()
 
 
-# nest_asyncio.apply()
+nest_asyncio.apply()
 # # create a strong reference to tasks since asyncio doesn't do this
-# task_references = set()
+task_references = set()
 
 # ---------------------------- HTTP Headers for pyppeteer, requests  to fetch jobs ----------------------------
 customUA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
@@ -56,9 +53,9 @@ headers = {
 
 
 openai_api_key = os.getenv("OPENAI_API_KEY")
-browserless_api_key = os.getenv("BROWSERLESS_API_KEY")
-crove_api_key = os.getenv("CROVE_API_KEY")
-linkedin_api_url = os.getenv("LINKEDIN_API_URL")
+browserless_api_key = "4795f0e6-6128-4155-a56f-2b09cbf14afe"
+crove_api_key = "31ed2630e388204290c6e198fd8c9c7d10b2109ec090c1b9565f3bfc2a42c0ba"
+linkedin_api_url = "https://www.linkedin.com/jobs-guest/jobs/api"
 # ---------------------------- Setting the API keys ----------------------------
 
 # ---------------------------- LLM with Langchain ----------------------------
@@ -147,25 +144,6 @@ def clean_text(text):
 # ---------------------------- Clean Text ----------------------------
 
 
-# ---------------------------- Generate HTML to display job results ----------------------------
-def generate_html(jobs):
-    html_str = '<div class="container">'
-    for job in jobs:
-        html_str += f"""
-            <div class="ops">
-                <h2>{job['Title']}</h2>
-                <p>{job['Company']}</p>
-                <p>{job['Location']}</p>
-                <p><a href="{job['Job URL']}">Job Link</a></p>
-            </div>
-        """
-    html_str += "</div>"
-    return html_strs
-
-
-# ---------------------------- Generate HTML to display job results ----------------------------
-
-
 # ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
 
 
@@ -197,28 +175,8 @@ def create_job_div(job, index):
             </div>""",
             unsafe_allow_html=True,
         )
-        create_view_button(job, index)
-
-
-def create_view_button(job, index):
-    # Unique key for each button based on job index
-    button_key = f"view_button_{index}"
-
-    # Instantiate the Modal object
-    modal = Modal(title=job["Title"], key=f"modal_key_{index}")
-    # Button to open the modal
-    if st.button("View Title", key=button_key):
-        modal.open()
-
-    if modal.is_open():
-        with modal.container():
-            st.write("Job Details")
-
-            st.write("Some fancy text")
-            value = st.checkbox("Check me")
-            st.write(f"Checkbox checked: {value}")
-            if st.button("Close", key=f"close_modal_{index}"):
-                modal.close()
+        with st.expander("See explanation"):
+            st.write(job["jDetails"])
 
 
 # ---------------------------- Split Jobs by 3 columns and styling them using CSS ----------------------------
@@ -232,6 +190,8 @@ async def fetch_jobs(url):
     page = await browser.newPage()
     await page.setUserAgent(customUA)
     await page.goto(url)
+    cookies = await page.cookies()
+    cookies_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
 
     alljobs = []
 
@@ -240,7 +200,7 @@ async def fetch_jobs(url):
         return document.querySelectorAll('.base-card.relative').length;
     }"""
     )
-    await page.screenshot({"path": "quotes.png", "fullPage": True})
+    # await page.screenshot({"path": "quotes.png", "fullPage": True})
 
     for i in range(1, i_tag_count + 1):
         job_details = {}
@@ -270,20 +230,23 @@ async def fetch_jobs(url):
             )
         )
 
-        # Assuming the job URL is also within the i tag container
         job_href_property = await page.querySelectorEval(
             f"{job_container_selector} a[href*='jobs']", "a => a.href"
         )
         job_details["Job URL"] = job_href_property
 
         # Fetch job details using requests and BeautifulSoup
-        # with requests.Session() as s:
-        #     response = s.get(job_details["jURL"], headers=headers)
-        #     soup = BeautifulSoup(response.content, features="lxml")
-        #     job_details["jDetails"] = [
-        #         element.get_text(strip=True)
-        #         for element in soup.select(".show-more-less-html__markup")
-        #     ]
+        with requests.Session() as s:
+            response = s.get(
+                job_details["Job URL"], cookies=cookies_dict, headers=headers
+            )
+            soup = BeautifulSoup(response.content, features="lxml")
+            job_description = soup.select(
+                ".show-more-less-html__markup.relative.overflow-hidden"
+            )
+            job_details["jDetails"] = clean_text(
+                " ".join(element.get_text() for element in job_description)
+            )
 
         alljobs.append(job_details)
 
@@ -428,34 +391,34 @@ async def main():
             else:
                 st.write("No jobs found.")
 
-    with st.form("my_form"):
-        text = st.text_area(
-            "Enter text:",
-            "Who are you and what you do?",
-        )
-        submitted = st.form_submit_button("Submit")
-        if submitted:
-            generate_response(text)
+    # with st.form("my_form"):
+    #     text = st.text_area(
+    #         "Enter text:",
+    #         "Who are you and what you do?",
+    #     )
+    #     submitted = st.form_submit_button("Submit")
+    #     if submitted:
+    #         generate_response(text)
 
-    if st.button("Build Resume", type="primary"):
-        # Check if the required fields are not empty
-        if not all([first_name, last_name, email, phone]):
-            st.error("Please fill in all required fields.")
-        else:
-            with st.spinner(
-                "Generating the resume..."
-            ):  # This ensures the spinner shows while the function is running
-                success, result = generate_resume_pdf(
-                    first_name, last_name, linkedin_URL, email, phone
-                )
-                if success:
-                    st.success("Resume Generated!")
-                    st.markdown(
-                        f'<a href="{result}" target="_blank">Download Resume</a>',
-                        unsafe_allow_html=True,
-                    )  # Display the PDF file
-                else:
-                    st.error(result)  # Display the error message
+    # if st.button("Build Resume", type="primary"):
+    #     # Check if the required fields are not empty
+    #     if not all([first_name, last_name, email, phone]):
+    #         st.error("Please fill in all required fields.")
+    #     else:
+    #         with st.spinner(
+    #             "Generating the resume..."
+    #         ):  # This ensures the spinner shows while the function is running
+    #             success, result = generate_resume_pdf(
+    #                 first_name, last_name, linkedin_URL, email, phone
+    #             )
+    #             if success:
+    #                 st.success("Resume Generated!")
+    #                 st.markdown(
+    #                     f'<a href="{result}" target="_blank">Download Resume</a>',
+    #                     unsafe_allow_html=True,
+    #                 )  # Display the PDF file
+    #             else:
+    #                 st.error(result)  # Display the error message
 
 
 if __name__ == "__main__":
@@ -468,8 +431,8 @@ st.markdown(
 <style>
 
 [data-testid="stHorizontalBlock"] {
-    display: flex;
-    align-items: end;
+    /*display: flex;
+    align-items: end;*/
 }
 body [data-testid="stVerticalBlockBorderWrapper"] div[data-modal-container='true'] > div:first-child > div:first-child {
     top: 10%;
