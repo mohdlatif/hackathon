@@ -3,6 +3,7 @@ you need to install the following packages
 
 `pip install asyncio pyppeteer requests bs4 streamlit dotenv langchain_openai langchain_core`
 
+Streamlit Cloud's memory restrictions (1GB) and potential CPU limitations made it unsuitable for this script. It was therefore hosted on a more powerful, dedicated server.
 Demo can be accessed through either:
 1- https://a875-2406-da18-605-6b00-7796-71e5-4272-a295.ngrok-free.app
 2- http://18.142.37.11:8501
