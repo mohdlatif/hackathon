@@ -113,10 +113,8 @@ def generate_response(
     9 technical skills
     For each job in Mohammed's career history, provide 2 quantified measures of his achievements or impact.
     The final output should replace each value with the generated content. Put the generated content in the correct JSON field, where the field name is mentioned, such as "resume_summary", "core_competencies_1", "Technical_skill_1", "Job_1_skills_1", "Job_1_skills_2", etc. Please ensure that you do not use brackets or arrays for fields like "Job_1_skills_1" and "Job_1_skills_2". Instead, provide the values separately.    
-    User
-    Your name is Rezbot, and you were created for mainly one reason: writing professional resumes. You must act like a top-notch resume writer with over 20 years of experience in this domain. Here are the details of the resume:
 
-    Here's the JSON template:
+    Here's the JSON template, phone number must be in string format :
     "template_id": "f17b9c42-f624-4f90-a876-7c6a5b61e60e",
     "name": "first_name_last_name",
     "background_mode": false,
@@ -356,7 +354,7 @@ async def fetch_jobs(url):
 
 
 def generate_resume_pdf(jjson):
-    full_name = first_name + "_" + last_name
+
     url = "https://v2.api.crove.app/api/integrations/external/helpers/generate-pdf-from-template/"  # Replace this with the actual API URL
 
     headers = {
@@ -523,7 +521,7 @@ async def main():
                 first_name,
                 last_name,
                 email,
-                linkedin_UR,
+                linkedin_URL,
                 phone,
                 edu1,
                 edu1location,
@@ -572,6 +570,7 @@ async def main():
                     desired_job,
                     job_description,
                 )
+                st.info(jjson)
                 # This ensures the spinner shows while the function is running
                 success, result = generate_resume_pdf(jjson)
                 if success:
