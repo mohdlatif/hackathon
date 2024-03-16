@@ -61,7 +61,12 @@ linkedin_api_url = "https://www.linkedin.com/jobs-guest/jobs/api"
 # ---------------------------- LLM with Langchain ----------------------------
 
 
-# Define function to generate a response
+# Construct the Crove resume generation prompt:
+# 1. Incorporate user input collected from the sidebar form.
+# 2. Enhance the prompt using OpenAI (for better phrasing or summary).
+# 3. Format the refined prompt to match Crove's default JSON structure.
+
+
 def generate_response(
     first_name,
     last_name,
