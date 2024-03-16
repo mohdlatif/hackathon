@@ -363,7 +363,7 @@ async def main():
 
         fetch_jobs_clicked = st.button("Fetch Jobs")
 
-        st.write("Lets gather basic info of you")
+        st.write("Lets gather basic info of you, it is okay with using fake data")
         c1, c2 = st.columns(2)
         with c1:
             first_name = st.text_input("First name", "", placeholder="Mohammed")
@@ -382,6 +382,68 @@ async def main():
         with c5:
             phone = st.text_input("Phone", "", placeholder="0597593221")
 
+        st.write("Please fill all the details")
+        c6, c7, c8, c9 = st.columns(4)
+        with c6:
+            edu1 = st.text_input(
+                "University name", "", placeholder="University of ....", key="ixk"
+            )
+        with c7:
+            edu1location = st.text_input(
+                "Location", "", placeholder="Dammam", key="f2s"
+            )
+        with c8:
+            edu1course = st.text_input(
+                "Degree", "", placeholder="Environmental engineer", key="d8b5"
+            )
+        with c9:
+            edu1date = st.text_input(
+                "Date duration", "", placeholder="2015-2020", key="ixkb5"
+            )
+
+        c10, c11, c12, c13 = st.columns(4)
+        with c10:
+            edu2 = st.text_input(
+                "University name", "", placeholder="University of ...."
+            )
+        with c11:
+            edu2location = st.text_input("Location", "", placeholder="UK")
+        with c12:
+            edu2course = st.text_input("Master", "", placeholder="No-code AI")
+        with c13:
+            edu2date = st.text_input("Date duration", "", placeholder="2020-2022")
+
+        c14, c15, c16, c17 = st.columns(4)
+        with c14:
+            job1 = st.text_input("Company name", "", placeholder="Aramco", key="c0k")
+        with c15:
+            job1location = st.text_input(
+                "Location", "", placeholder="Jeddah", key="psv"
+            )
+        with c16:
+            job1position = st.text_input(
+                "Position", "", placeholder="Data Analyst", key="x3dv"
+            )
+        with c17:
+            job1date = st.text_input(
+                "Duration", "", placeholder="2021-2022", key="v3vvv"
+            )
+
+        c18, c19, c20, c21 = st.columns(4)
+        with c18:
+            job2 = st.text_input("Company name", "", placeholder="Aramco", key="cvew")
+        with c19:
+            job2location = st.text_input(
+                "Location", "", placeholder="Jeddah", key="dkb3"
+            )
+        with c20:
+            job2position = st.text_input(
+                "Position", "", placeholder="Data Engineer", key="xx74csp"
+            )
+        with c21:
+            job2date = st.text_input(
+                "Duration", "", placeholder="2020-2021", key="xmso"
+            )
     if fetch_jobs_clicked:
         with st.spinner("Fetching..."):
             job_data = await fetch_jobs(linkedinURL(desired_job, selected_cities_str))
@@ -400,25 +462,25 @@ async def main():
     #     if submitted:
     #         generate_response(text)
 
-    # if st.button("Build Resume", type="primary"):
-    #     # Check if the required fields are not empty
-    #     if not all([first_name, last_name, email, phone]):
-    #         st.error("Please fill in all required fields.")
-    #     else:
-    #         with st.spinner(
-    #             "Generating the resume..."
-    #         ):  # This ensures the spinner shows while the function is running
-    #             success, result = generate_resume_pdf(
-    #                 first_name, last_name, linkedin_URL, email, phone
-    #             )
-    #             if success:
-    #                 st.success("Resume Generated!")
-    #                 st.markdown(
-    #                     f'<a href="{result}" target="_blank">Download Resume</a>',
-    #                     unsafe_allow_html=True,
-    #                 )  # Display the PDF file
-    #             else:
-    #                 st.error(result)  # Display the error message
+    if st.button("Build Resume", type="primary"):
+        # Check if the required fields are not empty
+        if not all([first_name, last_name, email, phone]):
+            st.error("Please fill in all required fields.")
+        else:
+            with st.spinner(
+                "Generating the resume..."
+            ):  # This ensures the spinner shows while the function is running
+                success, result = generate_resume_pdf(
+                    first_name, last_name, linkedin_URL, email, phone
+                )
+                if success:
+                    st.success("Resume Generated!")
+                    st.markdown(
+                        f'<a href="{result}" target="_blank">Download Resume</a>',
+                        unsafe_allow_html=True,
+                    )  # Display the PDF file
+                else:
+                    st.error(result)  # Display the error message
 
 
 if __name__ == "__main__":
