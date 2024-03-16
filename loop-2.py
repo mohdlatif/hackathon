@@ -71,7 +71,7 @@ def generate_response(input_text):
         [
             (
                 "system",
-                "You are RezBot, a bot that aims to help graduate students find their job.",
+                "You are RezBot, a bot that aims to help people find their job.",
             ),
             ("user", input_text),
         ]
@@ -349,7 +349,7 @@ async def main():
     st.title("RezBot")
 
     with st.sidebar:
-
+        selected_cities_str = ""
         st.write("Choose your work locations")
         with st.popover("Location"):
             st.markdown("Choose your preferred work locations")
@@ -357,13 +357,14 @@ async def main():
                 if st.checkbox(city_name, key=city_value):
                     selected_cities.append(city_value)
                     selected_cities_str = "&".join(selected_cities)
+        st.write("Selected location(s):", selected_cities_str)
 
         st.write("Please specify the job title you are applying for.")
         desired_job = st.text_input("Job title", "", placeholder="Data Engineer")
 
-        fetch_jobs_clicked = st.button("Fetch Jobs")
+        fetch_jobs_clicked = st.button("Fetch Jobs", type="primary")
 
-        st.write("Lets gather basic info of you, it is okay with using fake data")
+        st.write("Lets gather basic info of you")
         c1, c2 = st.columns(2)
         with c1:
             first_name = st.text_input("First name", "", placeholder="Mohammed")
@@ -444,14 +445,23 @@ async def main():
             job2date = st.text_input(
                 "Duration", "", placeholder="2020-2021", key="xmso"
             )
+
+        build_resume_clicked = st.button("Build Resume", type="primary")
+
     if fetch_jobs_clicked:
-        with st.spinner("Fetching..."):
-            job_data = await fetch_jobs(linkedinURL(desired_job, selected_cities_str))
-            st.success("Jobs Fetched!")
-            if job_data:
-                html_code = jobs_display(job_data)
-            else:
-                st.write("No jobs found.")
+        # Check if the required fields are not empty
+        if not all([desired_job, selected_cities_str]):
+            st.error("Job title and locations required")
+        else:
+            with st.spinner("Fetching..."):
+                job_data = await fetch_jobs(
+                    linkedinURL(desired_job, selected_cities_str)
+                )
+                st.success("Jobs Fetched!")
+                if job_data:
+                    html_code = jobs_display(job_data)
+                else:
+                    st.write("No jobs found.")
 
     # with st.form("my_form"):
     #     text = st.text_area(
@@ -462,9 +472,32 @@ async def main():
     #     if submitted:
     #         generate_response(text)
 
-    if st.button("Build Resume", type="primary"):
+    if build_resume_clicked:
         # Check if the required fields are not empty
-        if not all([first_name, last_name, email, phone]):
+        if not all(
+            [
+                first_name,
+                last_name,
+                email,
+                phone,
+                edu1,
+                edu1location,
+                edu1course,
+                edu1date,
+                edu2,
+                edu2location,
+                edu2course,
+                edu2date,
+                job1,
+                job1location,
+                job1position,
+                job1date,
+                job2,
+                job2location,
+                job2position,
+                job2date,
+            ]
+        ):
             st.error("Please fill in all required fields.")
         else:
             with st.spinner(
