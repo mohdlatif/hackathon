@@ -1,0 +1,14 @@
+asyncio
+signal
+traceback
+nest_asyncio
+pyppeteer
+requests
+bs4
+re
+json
+streamlit_modal
+os
+load_dotenv
+langchain_openai
+langchain_core.prompts
